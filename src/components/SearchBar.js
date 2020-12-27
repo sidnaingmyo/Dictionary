@@ -1,20 +1,14 @@
 import React from 'react';
-import { Container } from 'react-bootstrap';
 
-const SearchBar = (props) => {
+const SearchBar = ({ searchterm, onhandleSubmit, onSearchSubmit }) => {
   return (
-    <div className='ui segment bg-primary'>
+    <div className='ui segment'>
       <form className='ui form'>
         <div className='ui action input'>
-          <input
-            type='text'
-            value={props.searchterm}
-            onChange={props.onhandleSubmit}
-            placeholder='Enter'
-          />
+          <input type='text' value={searchterm} onChange={onhandleSubmit} placeholder='Enter' />
 
-          <button class='ui button' onClick={props.onSearchSubmit}>
-            Search
+          <button className='ui button' onClick={onSearchSubmit}>
+            <i className='search icon'></i>
           </button>
         </div>
       </form>

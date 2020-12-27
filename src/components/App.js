@@ -1,24 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import SearchBar from './SearchBar';
 import { ListGroup, ListGroupItem } from 'react-bootstrap';
 import axios from 'axios';
 import ResultList from './ResultList';
 import Definitions from './Definitions';
+import Translate from './Translate';
 
-class App extends React.Component {
-  state = {
-    searchterm: '',
-    sameWord: [],
-    value: '',
-    sense: [],
-  };
 
-  onhandleSubmit = (e) => {
+import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
+import '../index.css';
+
+const App = () => {
+  const [searchterm, setSearchterm] = useState('');
+  const [sameWord, setSameWord] = useState([]);
+
+  const [sense, setSense] = useState([]);
+  const onhandleSubmit = (e) => {
     e.preventDefault();
-    this.setState({ searchterm: e.target.value });
+    setSearchterm(e.target.value);
   };
-
-  handleClick = async (e) => {
+  const handleClick = async (e) => {
     const value = e.target.innerHTML;
     const config = {
       url: `/entries/en-gb/${value}?fields=definitions,variantForms&strictMatch=false`,
@@ -30,19 +31,13 @@ class App extends React.Component {
       },
     };
     await axios(config).then((data) => {
-      this.setState({
-        ...this.state,
-
-        sense: data.data.results[0].lexicalEntries[0].entries[0].senses,
-      });
+      setSense(data.data.results[0].lexicalEntries[0].entries[0].senses);
     });
-    console.log('sense..', this.state.sense);
   };
-
-  onSearchSubmit = async (e) => {
+  const onSearchSubmit = async (e) => {
     e.preventDefault();
     const config = {
-      url: `/search/thesaurus/en?q=${this.state.searchterm}&prefix=false`,
+      url: `/search/thesaurus/en?q=${searchterm}&prefix=false`,
       method: 'GET',
       headers: {
         Accept: 'application/json',
@@ -50,37 +45,53 @@ class App extends React.Component {
         app_key: 'a1f99c5cb4c3aa6293ce631a18ffbfc9',
       },
     };
-    await axios(config).then((data) => this.setState({ sameWord: [data] }));
+    await axios(config).then((data) => setSameWord([data]));
   };
-  render() {
-    return (
-      <div className='ui container' style={{ marginTop: '10px' }}>
-        <div>
-          <SearchBar
-            searchterm={this.state.searchterm}
-            onhandleSubmit={this.onhandleSubmit}
-            onSearchSubmit={this.onSearchSubmit}
-          />
+
+  return (
+    <div className='ui container' style={{ marginTop: '10px' }}>
+      <Router>
+        <div className='ui secondary pointing menu'>
+          <Link to='/' className='item'>
+            Dictionary
+          </Link>
+          <Link to='/translate' className='item'>
+            Translater
+          </Link>
         </div>
-        <div class='ui grid' style={{ marginTop: '10px' }}>
-          <div className='ten wide column'>
-            <ListGroup>
-              <ListGroupItem>
-                <ResultList sameWord={this.state.sameWord} onClick={this.handleClick} />
-              </ListGroupItem>
-            </ListGroup>
-          </div>
-          <div class='six wide column'>
-            <ListGroup>
-              <ListGroupItem>
-                <Definitions sense={this.state.sense} />
-              </ListGroupItem>
-            </ListGroup>
-          </div>
-        </div>
-      </div>
-    );
-  }
-}
+        <Switch>
+          <Route path='/translate'>
+            <Translate />
+          </Route>
+          <Route path='/'>
+            <div>
+              <SearchBar
+                searchterm={searchterm}
+                onhandleSubmit={onhandleSubmit}
+                onSearchSubmit={onSearchSubmit}
+              />
+            </div>
+            <div className='ui grid' style={{ marginTop: '10px' }}>
+              <div className='ten wide column'>
+                <ListGroup>
+                  <ListGroupItem>
+                    <ResultList sameWord={sameWord} onClick={handleClick} />
+                  </ListGroupItem>
+                </ListGroup>
+              </div>
+              <div className='six wide column'>
+                <ListGroup>
+                  <ListGroupItem>
+                    <Definitions sense={sense} />
+                  </ListGroupItem>
+                </ListGroup>
+              </div>
+            </div>
+          </Route>
+        </Switch>
+      </Router>
+    </div>
+  );
+};
 
 export default App;
